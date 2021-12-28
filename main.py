@@ -1,12 +1,12 @@
 import requests
-import datetime
 import keys
+import smtplib
 
 keys = keys.Keys()
 
 weather_params = {
-    "lat": -33.918861,
-    "lon": 18.423300,
+    "lat": keys.lat,
+    "lon": keys.lon,
     "appid": keys.api_key,
     "exclude": "current,minutely,daily"
 }
@@ -18,11 +18,16 @@ weather_data = response.json()
 hourly_weather = weather_data["hourly"]
 bring_umbrella = False
 weather = [hour["weather"][0]["id"] for hour in hourly_weather]
-for hour in range(8):
+for hour in range(12):
     if weather[hour] < 700:
         bring_umbrella = True
 
-print(bring_umbrella)
-print(weather)
-time_hour = f"{datetime.datetime.now()}".split(" ")[1].split(":")[0]
-print(time_hour)
+if bring_umbrella:
+    with smtplib.SMTP("smtp.gmail.com") as connection:
+        connection.starttls()
+        connection.login(user=keys.email, password=keys.password)
+        connection.sendmail(
+            from_addr=keys.email,
+            to_addrs=keys.email,
+            msg=f'Subject:RAIN ALERT\n\nIts going to rain, remember to bring an umbrella!'
+        )
